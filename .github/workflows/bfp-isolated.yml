@@ -1,0 +1,129 @@
+name: BFP isolated verification af551c8efff9
+'on':
+  push:
+    branches:
+    - bfp-isolated-af551c8efff9
+permissions: {}
+jobs:
+  buggy_build-push-images:
+    runs-on: ubuntu-latest
+    outputs:
+      probe: ${{ steps.write.outputs.probe }}
+    steps:
+    - id: write
+      run: echo "probe=available" >> "$GITHUB_OUTPUT"
+  buggy_setup-e2e-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      probe: ${{ steps.write.outputs.probe }}
+    steps:
+    - id: write
+      run: echo "probe=available" >> "$GITHUB_OUTPUT"
+  buggy_test-current-kubernetes:
+    runs-on: ubuntu-latest
+    needs:
+    - buggy_build-push-images
+    steps:
+    - name: Read setup-e2e-tests output
+      if: ${{ !cancelled() }}
+      env:
+        NEEDS_JSON: ${{ toJSON(needs) }}
+        PRODUCER: buggy_setup-e2e-tests
+      run: 'python - <<''PY''
+
+        import json, os
+
+        needs = json.loads(os.environ[''NEEDS_JSON''])
+
+        value = needs.get(os.environ[''PRODUCER''], {}).get(''outputs'', {}).get(''probe'')
+
+        print(f''producer output={value!r}'')
+
+        raise SystemExit(value != ''available'')
+
+        PY'
+  buggy_test-previous-kubernetes:
+    runs-on: ubuntu-latest
+    needs:
+    - buggy_build-push-images
+    steps:
+    - name: Read setup-e2e-tests output
+      if: ${{ !cancelled() }}
+      env:
+        NEEDS_JSON: ${{ toJSON(needs) }}
+        PRODUCER: buggy_setup-e2e-tests
+      run: 'python - <<''PY''
+
+        import json, os
+
+        needs = json.loads(os.environ[''NEEDS_JSON''])
+
+        value = needs.get(os.environ[''PRODUCER''], {}).get(''outputs'', {}).get(''probe'')
+
+        print(f''producer output={value!r}'')
+
+        raise SystemExit(value != ''available'')
+
+        PY'
+  human_build-push-images:
+    runs-on: ubuntu-latest
+    outputs:
+      probe: ${{ steps.write.outputs.probe }}
+    steps:
+    - id: write
+      run: echo "probe=available" >> "$GITHUB_OUTPUT"
+  human_setup-e2e-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      probe: ${{ steps.write.outputs.probe }}
+    steps:
+    - id: write
+      run: echo "probe=available" >> "$GITHUB_OUTPUT"
+  human_test-current-kubernetes:
+    runs-on: ubuntu-latest
+    needs:
+    - human_build-push-images
+    - human_setup-e2e-tests
+    steps:
+    - name: Read setup-e2e-tests output
+      if: ${{ !cancelled() }}
+      env:
+        NEEDS_JSON: ${{ toJSON(needs) }}
+        PRODUCER: human_setup-e2e-tests
+      run: 'python - <<''PY''
+
+        import json, os
+
+        needs = json.loads(os.environ[''NEEDS_JSON''])
+
+        value = needs.get(os.environ[''PRODUCER''], {}).get(''outputs'', {}).get(''probe'')
+
+        print(f''producer output={value!r}'')
+
+        raise SystemExit(value != ''available'')
+
+        PY'
+  human_test-previous-kubernetes:
+    runs-on: ubuntu-latest
+    needs:
+    - human_build-push-images
+    - human_setup-e2e-tests
+    steps:
+    - name: Read setup-e2e-tests output
+      if: ${{ !cancelled() }}
+      env:
+        NEEDS_JSON: ${{ toJSON(needs) }}
+        PRODUCER: human_setup-e2e-tests
+      run: 'python - <<''PY''
+
+        import json, os
+
+        needs = json.loads(os.environ[''NEEDS_JSON''])
+
+        value = needs.get(os.environ[''PRODUCER''], {}).get(''outputs'', {}).get(''probe'')
+
+        print(f''producer output={value!r}'')
+
+        raise SystemExit(value != ''available'')
+
+        PY'
